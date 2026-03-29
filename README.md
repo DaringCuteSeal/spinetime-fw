@@ -1,5 +1,5 @@
 # spinetime-fw
-Firmware for [SpineTime](https://github.com/Daringcuteseal/spinetime). This firmware runs on ATtiny1616 at 8 MHz clock speed. It can be flashed via the UPDI pin of the SpineTime controller unit with a USB-to-TTL adapter from a computer using SerialUPDI. To configure the time, serial connection can be used
+Firmware for [SpineTime](https://github.com/Daringcuteseal/spinetime). This firmware runs on ATtiny1616 at 8 MHz clock speed. It can be flashed via the UPDI pin of the SpineTime controller unit with a USB-to-TTL adapter from a computer using SerialUPDI. To configure the resulting firmware, the `cfg.h` file can be edited accordingly.
 
 ## Credits
 Libraries & apps used:
