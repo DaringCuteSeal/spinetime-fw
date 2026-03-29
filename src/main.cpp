@@ -109,6 +109,7 @@ void set_alarm()
   attachInterrupt(PIN_INT, isr, FALLING);
 }
 
+// enable writing to some locked registers, by writing to the CCP (configuration change protection) register.
 inline void unlock_ccp()
 {
   CCP = CCP_IOREG_gc;
@@ -193,7 +194,5 @@ void routine()
 void loop()
 {
   if (isr_is_triggered)
-  {
     routine();
-  }
 }
