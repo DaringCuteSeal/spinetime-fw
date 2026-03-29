@@ -121,7 +121,7 @@ inline uint8_t mod(uint8_t a, uint8_t b)
     return a % b;
   else
     // -a % b = (b - (a % b)) % b
-    return (b - ((a * -1) % b)) % b;
+    return (b - ((-a) % b)) % b;
 }
 
 // Set the brown-out detector configuration.
