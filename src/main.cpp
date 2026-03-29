@@ -39,6 +39,7 @@ DateTime compile_time(__DATE__, __TIME__);
 #endif
 
 #if SET_TIME == true
+// Set the time to compilation time.
 void set_time()
 {
   rtc.setEpoch(compile_time.getUnixTime());
@@ -61,12 +62,14 @@ void set_time()
 }
 #endif
 
+// Subroutine to be called when waking up from sleep.
 void isr()
 {
   isr_is_triggered = true;
-  rtc.turnOffAlarm(1);
+  rtc.turnOffAlarm(1); // turn off the alarm, otherwise the system will never wake up again
 }
 
+// Configure the DS3231 real-time system clock.
 void configure_rtc()
 {
   // Set to 24-hour format
@@ -121,6 +124,7 @@ inline uint8_t mod(uint8_t a, uint8_t b)
     return (b - ((a * -1) % b)) % b;
 }
 
+// Set the brown-out detector configuration.
 void set_bod_config()
 {
   cli(); // Disable interrupts (for writing to the configuration change protected register)
@@ -133,8 +137,8 @@ void set_bod_config()
 // Sets the system to power down mode.
 void system_power_down()
 {
-  SLPCTRL_CTRLA = (SLPCTRL_CTRLA & ~SLPCTRL_SMODE_gm) | SLPCTRL_SMODE_PDOWN_gc;
-  SLPCTRL_CTRLA |= SLPCTRL_SEN_bm;
+  SLPCTRL_CTRLA = (SLPCTRL_CTRLA & ~SLPCTRL_SMODE_gm) | SLPCTRL_SMODE_PDOWN_gc; // set to power down sleep mode
+  SLPCTRL_CTRLA |= SLPCTRL_SEN_bm;                                              // enable the sleep bit
   asm("sleep ;");
 }
 
@@ -145,6 +149,7 @@ void set_led_strip()
   uint8_t curr_hour = rtc.getHour(tmp, tmp); // we do not need to read the AM/PM because we assume we're running with the 24-hour format.
   uint8_t curr_min = rtc.getMinute();
   led_strip.clear();
+  // below, we blend together the current hour's LED and the next one's, with ratio of current_minute : (60 - current_minute).
   led_strip.setPixelColor(mod(curr_hour - 3, LED_COUNT), led_strip.Color(COLOR_R * RED_STEPS * (60 - curr_min), COLOR_G * GREEN_STEPS * (60 - curr_min), COLOR_B * BLUE_STEPS * (60 - curr_min)));
   led_strip.setPixelColor(mod(curr_hour - 2, LED_COUNT), led_strip.Color(COLOR_R * RED_STEPS * curr_min, COLOR_G * GREEN_STEPS * curr_min, COLOR_B * BLUE_STEPS * curr_min));
 }
