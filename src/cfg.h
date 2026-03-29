@@ -4,10 +4,23 @@
 // Set this to true in order for the microcontroller to print out debug messages (via serial communication).
 #define SET_DBG true
 
-// Color of LED. Default: rgb(146, 61, 4) (dim amber)
-#define COLOR_R 146
-#define COLOR_G 61
-#define COLOR_B 4
+// The starting hour of the bookmark.
+#define HOUR_OFFSET 3
+
+// Color of LED, when combined together (two LEDs will be lit up, so this is the
+// sum of both). Default: rgb(180, 60, 0) (amber).
+//
+// It is recommended to set the
+// value here to multiples of 60 so that the linear interpolation with
+// resolution of COLOR ÷ 60 will be able to replicate the original color values
+// listed below.
+
+// Red channel
+#define COLOR_R 180
+// Green channel
+#define COLOR_G 60
+// Blue channel
+#define COLOR_B 0
 
 // Baud rate (for serial communication, used only for debugging if the debug flag is set).
 #define SERIAL_BAUD_RATE 38400

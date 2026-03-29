@@ -23,12 +23,16 @@
 #include <DS3231-RTC.h>
 #include "cfg.h"
 
+constexpr uint8_t RED_STEPS = COLOR_R / 60;
+constexpr uint8_t GREEN_STEPS = COLOR_G / 60;
+constexpr uint8_t BLUE_STEPS = COLOR_B / 60;
+
+bool isr_is_triggered = false;
+
 tinyNeoPixel led_strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 DS3231 rtc;
 RTClib rtclib;
 uint16_t pixelNumber = LED_COUNT;
-
-bool isr_is_triggered = false;
 
 #if SET_TIME == true
 DateTime compile_time(__DATE__, __TIME__);
@@ -40,7 +44,6 @@ void set_time()
   rtc.setEpoch(compile_time.getUnixTime());
   DateTime now = rtclib.now();
 #if SET_DBG == true
-  Serial.begin(SERIAL_BAUD_RATE);
   Serial.println(F("Time has been set to: "));
   Serial.print(now.getYear(), DEC);
   Serial.print("-");
@@ -61,8 +64,14 @@ void set_time()
 void isr()
 {
   isr_is_triggered = true;
+  rtc.turnOffAlarm(1);
 }
 
+void configure_rtc()
+{
+  // Set to 24-hour format
+  rtc.setClockMode(false);
+}
 // Set an alarm that calls ISR on the next (multiple of 10) minute.
 void set_alarm()
 {
@@ -102,6 +111,16 @@ inline void unlock_ccp()
   CCP = CCP_IOREG_gc;
 }
 
+// modulo operator that works with negative numbers.
+inline uint8_t mod(uint8_t a, uint8_t b)
+{
+  if (a >= 0)
+    return a % b;
+  else
+    // -a % b = (b - (a % b)) % b
+    return (b - ((a * -1) % b)) % b;
+}
+
 void set_bod_config()
 {
   cli(); // Disable interrupts (for writing to the configuration change protected register)
@@ -116,11 +135,26 @@ void system_power_down()
 {
   SLPCTRL_CTRLA = (SLPCTRL_CTRLA & ~SLPCTRL_SMODE_gm) | SLPCTRL_SMODE_PDOWN_gc;
   SLPCTRL_CTRLA |= SLPCTRL_SEN_bm;
-  asm("SLEEP");
+  asm("sleep ;");
+}
+
+// Set the LED strip to the correct state based on the hour and minute.
+void set_led_strip()
+{
+  bool tmp;
+  uint8_t curr_hour = rtc.getHour(tmp, tmp); // we do not need to read the AM/PM because we assume we're running with the 24-hour format.
+  uint8_t curr_min = rtc.getMinute();
+  led_strip.clear();
+  led_strip.setPixelColor(mod(curr_hour - 3, LED_COUNT), led_strip.Color(COLOR_R * RED_STEPS * (60 - curr_min), COLOR_G * GREEN_STEPS * (60 - curr_min), COLOR_B * BLUE_STEPS * (60 - curr_min)));
+  led_strip.setPixelColor(mod(curr_hour - 2, LED_COUNT), led_strip.Color(COLOR_R * RED_STEPS * curr_min, COLOR_G * GREEN_STEPS * curr_min, COLOR_B * BLUE_STEPS * curr_min));
 }
 
 void setup()
 {
+  configure_rtc();
+#if SET_DBG == true
+  Serial.begin(SERIAL_BAUD_RATE);
+#endif
 #if SET_TIME == true
   set_time();
 #endif
@@ -140,7 +174,15 @@ void loop()
 {
   if (isr_is_triggered)
   {
-    rtc.turnOffAlarm(1);
+#if SET_TIME == true
+    Serial.println(F("Woke up! configuring clock's LED.."));
+#endif
+    set_led_strip();
     set_alarm();
+#if SET_TIME == true
+    Serial.println(F("System is powering down again.."));
+#endif
+    delay(2000);         // safety measure...
+    system_power_down(); // sleep again
   }
 }
