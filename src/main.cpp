@@ -167,22 +167,27 @@ void setup()
   delay(2000);
   set_alarm();
   sei();
-  system_power_down();
+  routine();
+}
+
+void routine()
+{
+#if SET_TIME == true
+  Serial.println(F("Configuring clock's LED.."));
+#endif
+  set_led_strip();
+  set_alarm();
+#if SET_TIME == true
+  Serial.println(F("System is powering down again.."));
+#endif
+  delay(2000);         // safety measure...
+  system_power_down(); // sleep again
 }
 
 void loop()
 {
   if (isr_is_triggered)
   {
-#if SET_TIME == true
-    Serial.println(F("Woke up! configuring clock's LED.."));
-#endif
-    set_led_strip();
-    set_alarm();
-#if SET_TIME == true
-    Serial.println(F("System is powering down again.."));
-#endif
-    delay(2000);         // safety measure...
-    system_power_down(); // sleep again
+    routine();
   }
 }
