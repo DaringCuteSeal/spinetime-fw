@@ -109,6 +109,18 @@ void set_alarm()
   attachInterrupt(PIN_INT, isr, FALLING);
 }
 
+// sets the ADC voltage resolution
+inline void select_adc_res()
+{
+  ADC0_CTRLA = (ADC0_CTRLA & ~ADC_RESSEL_bm) | ADC_RESSEL_10BIT_gc;
+}
+
+// select the correct reference voltage for reading battery level
+inline void select_bandgap()
+{
+  VREF_CTRLA = (VREF_CTRLA & ~VREF_ADC0REFSEL0_bm) | VREF_ADC0REFSEL_1V1_gc;
+}
+
 // enable writing to some locked registers, by writing to the CCP (configuration change protection) register.
 inline void unlock_ccp()
 {
@@ -173,6 +185,7 @@ void setup()
   delay(2000);
   set_alarm();
   sei();
+  select_bandgap();
   routine();
 }
 
@@ -193,6 +206,14 @@ void routine()
 
 void loop()
 {
+  // halt everything when battery's low >:)
+  while (analogRead(PIN_BAT) < LOW_BAT_THRESH)
+  {
+    digitalWriteFast(BAT_LED_PIN, 1);
+    delay(1000);
+    digitalWriteFast(BAT_LED_PIN, 0);
+    delay(1000);
+  }
   if (isr_is_triggered)
     routine();
 }

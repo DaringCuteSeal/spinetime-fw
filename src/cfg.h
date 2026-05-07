@@ -53,3 +53,13 @@
 
 // Interupt pin used for sleep & wake-up.
 #define PIN_INT PIN_PA2
+
+// Pin used for sensing current battery voltage
+#define PIN_BAT PIN_PB2
+
+// Threshold for low battery
+// remember to sync with the resolution of the board's ADC, we have it set to 10 bits for now
+// 716 is approximately 3.5 volts.
+#define LOW_BAT_THRESH 716
+
+#define BAT_LED_PIN PIN_PC1
