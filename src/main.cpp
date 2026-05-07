@@ -185,6 +185,7 @@ void setup()
   delay(2000);
   set_alarm();
   sei();
+  select_adc_res();
   select_bandgap();
   routine();
 }
